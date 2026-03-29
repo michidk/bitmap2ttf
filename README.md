@@ -1,5 +1,10 @@
 # bitmap2ttf
 
+[![bitmap2ttf crate](https://img.shields.io/crates/v/bitmap2ttf)](https://crates.io/crates/bitmap2ttf)
+[![bitmap2ttf-cli crate](https://img.shields.io/crates/v/bitmap2ttf-cli)](https://crates.io/crates/bitmap2ttf-cli)
+[![MIT License](https://img.shields.io/crates/l/bitmap2ttf)](https://choosealicense.com/licenses/mit/)
+[![Continuous integration](https://github.com/michidk/bitmap2ttf/actions/workflows/ci.yml/badge.svg)](https://github.com/michidk/bitmap2ttf/actions/workflows/ci.yml)
+
 Convert bitmap font glyphs into TrueType (.ttf) vector fonts.
 
 Takes pixel-grid glyph data and produces valid TrueType fonts with traced vector outlines — no hinting, just clean bitmap-to-outline conversion. Useful for retro game preservation, pixel font creation, and embedding bitmap fonts in applications that require vector formats.
@@ -16,12 +21,16 @@ Takes pixel-grid glyph data and produces valid TrueType fonts with traced vector
 
 ### Library
 
+Install [bitmap2ttf using cargo](https://crates.io/crates/bitmap2ttf):
+
 ```toml
 [dependencies]
 bitmap2ttf = "0.1"
 ```
 
 ### CLI
+
+Install [bitmap2ttf-cli using cargo](https://crates.io/crates/bitmap2ttf-cli):
 
 ```bash
 cargo install bitmap2ttf-cli
