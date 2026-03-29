@@ -29,8 +29,6 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.RELEASE_TOKEN }}
 
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@stable
