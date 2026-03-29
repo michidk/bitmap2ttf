@@ -1,6 +1,6 @@
 [package]
 name = "bitmap2ttf"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Michael Lohr <michael@lohr.dev>"]
 description = "Convert bitmap font glyphs into TrueType (.ttf) vector fonts"

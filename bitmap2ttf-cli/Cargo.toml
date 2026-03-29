@@ -1,6 +1,6 @@
 [package]
 name = "bitmap2ttf-cli"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Michael Lohr <michael@lohr.dev>"]
 description = "CLI tool to convert bitmap fonts (BMFont format) into TrueType (.ttf) vector fonts"
@@ -17,7 +17,7 @@ name = "bitmap2ttf"
 path = "src/main.rs"
 
 [dependencies]
-bitmap2ttf = { version = "0.1.0", path = "../bitmap2ttf" }
+bitmap2ttf = { version = "0.1.1", path = "../bitmap2ttf" }
 clap = { version = "4.6.0", features = ["derive", "color", "help", "usage", "suggestions", "wrap_help"] }
 image = { version = "0.25.8", default-features = false, features = ["png"] }
 serde = { version = "1.0.219", features = ["derive"] }

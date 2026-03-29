@@ -78,7 +78,7 @@ checksum = "843867be96c8daad0d758b57df9392b6d8d271134fce549de6ce169ff98a92af"
 
 [[package]]
 name = "bitmap2ttf"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kurbo",
  "thiserror",
@@ -88,7 +88,7 @@ dependencies = [
 
 [[package]]
 name = "bitmap2ttf-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bitmap2ttf",
  "clap",
