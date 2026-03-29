@@ -1,0 +1,21 @@
+[package]
+name = "bitmap2ttf"
+version = "0.1.0"
+edition = "2024"
+authors = ["Michael Lohr <michael@lohr.dev>"]
+description = "Convert bitmap font glyphs into TrueType (.ttf) vector fonts"
+readme = "../README.md"
+repository = "https://github.com/michidk/bitmap2ttf"
+documentation = "https://github.com/michidk/bitmap2ttf"
+homepage = "https://github.com/michidk/bitmap2ttf"
+license = "MIT"
+keywords = ["bitmap", "font", "ttf", "truetype", "pixel-font"]
+categories = ["graphics", "command-line-utilities"]
+
+[dependencies]
+kurbo = "0.11"
+write-fonts = "0.39"
+thiserror = "2.0.18"
+
+[dev-dependencies]
+ttf-parser = "0.24"

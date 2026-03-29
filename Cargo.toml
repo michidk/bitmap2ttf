@@ -1,0 +1,3 @@
+[workspace]
+members = ["bitmap2ttf", "bitmap2ttf-cli"]
+resolver = "2"
