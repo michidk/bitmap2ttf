@@ -10,7 +10,7 @@ Takes pixel-grid glyph data and produces valid TrueType fonts with traced vector
 - Run-length rect merging for minimal contour counts
 - Complete TTF table set: head, hhea, hmtx, maxp, cmap, name, OS/2, post, glyf/loca, gasp, DSIG
 - Fallible integer conversions throughout (no panics on overflow)
-- BMFont (.fnt + .png atlas) CLI input support
+- BMFont (.fnt + .png atlas) and PNG+JSON CLI input support
 
 ## Installation
 
@@ -55,32 +55,29 @@ let ttf_bytes = build_ttf(&glyphs, &config)?;
 std::fs::write("output.ttf", ttf_bytes)?;
 ```
 
-### Integration in redguard-preservation
+### Integration in existing importers
 
-`redguard-preservation` can map `FntGlyph` directly to `BitmapGlyph` with no extra format conversion:
+Existing bitmap font importers can map their parsed glyph structures directly to `BitmapGlyph` with no extra format conversion:
 
 ```rust
 use bitmap2ttf::{BitmapGlyph, FontConfig, build_ttf};
 
-let glyphs: Vec<BitmapGlyph> = parsed
-    .glyphs
+let glyphs: Vec<BitmapGlyph> = parsed_glyphs
     .iter()
-    .enumerate()
-    .map(|(idx, g)| BitmapGlyph {
-        codepoint: u32::from(parsed.header.character_start)
-            .saturating_add(u32::try_from(idx).unwrap_or(0)),
+    .map(|g| BitmapGlyph {
+        codepoint: g.codepoint,
         width: g.width,
         height: g.height,
-        offset_x: g.offset_left,
-        offset_y: g.offset_top,
-        advance_width: Some(g.width.saturating_add(1)),
+        offset_x: g.offset_x,
+        offset_y: g.offset_y,
+        advance_width: g.advance_width,
         pixels: g.pixels.clone(),
     })
     .collect();
 
 let config = FontConfig {
-    family_name: "RedguardFnt".to_string(),
-    line_height: parsed.header.line_height,
+    family_name: "MyBitmapFont".to_string(),
+    line_height: 16,
     scale: 64,
 };
 
@@ -95,7 +92,38 @@ Convert a BMFont (.fnt + .png atlas) to TrueType:
 bitmap2ttf input.fnt -o output.ttf
 ```
 
-The CLI reads BMFont text-format descriptors and their referenced PNG atlas pages. The `.fnt` file provides codepoint mappings, glyph dimensions, offsets, and advance widths — everything needed to produce a TTF without additional configuration.
+Convert a PNG+JSON descriptor to TrueType:
+
+```bash
+bitmap2ttf font.json -o output.ttf
+```
+
+The CLI reads either:
+
+- BMFont text descriptors (`.fnt`) with PNG atlas page references
+- JSON descriptors (`.json`) with either `image` (single page) or `pages` (multi-page)
+
+JSON descriptor shape:
+
+```json
+{
+  "line_height": 16,
+  "image": "atlas.png",
+  "glyphs": [
+    {
+      "codepoint": 65,
+      "x": 0,
+      "y": 0,
+      "width": 8,
+      "height": 8,
+      "offset_x": 0,
+      "offset_y": 0,
+      "advance_width": 9,
+      "page": 0
+    }
+  ]
+}
+```
 
 ## How It Works
 

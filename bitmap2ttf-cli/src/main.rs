@@ -1,15 +1,16 @@
 use bitmap2ttf::{BitmapGlyph, FontConfig, build_ttf};
 use clap::Parser;
 use image::ImageReader;
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 #[derive(Parser, Debug)]
 #[command(name = "bitmap2ttf")]
-#[command(about = "Convert BMFont bitmap fonts to TrueType")]
+#[command(about = "Convert bitmap font descriptors to TrueType")]
 struct Args {
-    #[arg(help = "Input BMFont text descriptor (.fnt)")]
+    #[arg(help = "Input descriptor (.fnt BMFont text or .json PNG+JSON)")]
     input: PathBuf,
     #[arg(short, long, help = "Output TrueType file path (.ttf)")]
     output: PathBuf,
@@ -29,20 +30,57 @@ struct Args {
 struct BmfontInfo {
     line_height: u16,
     pages: HashMap<u16, String>,
-    chars: Vec<BmfontChar>,
+    chars: Vec<GlyphRect>,
 }
 
 #[derive(Debug, Clone)]
-struct BmfontChar {
+struct GlyphRect {
     id: u32,
     x: u32,
     y: u32,
     width: u16,
     height: u16,
-    xoffset: i16,
-    yoffset: i16,
-    xadvance: u16,
+    offset_x: i16,
+    offset_y: i16,
+    advance_width: u16,
     page: u16,
+}
+
+#[derive(Debug, Deserialize)]
+struct JsonDescriptor {
+    line_height: u16,
+    pages: Option<Vec<JsonPage>>,
+    image: Option<String>,
+    glyphs: Vec<JsonGlyph>,
+}
+
+#[derive(Debug, Deserialize)]
+struct JsonPage {
+    id: u16,
+    file: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct JsonGlyph {
+    codepoint: u32,
+    x: u32,
+    y: u32,
+    width: u16,
+    height: u16,
+    #[serde(alias = "xoffset")]
+    offset_x: i16,
+    #[serde(alias = "yoffset")]
+    offset_y: i16,
+    #[serde(alias = "xadvance")]
+    advance_width: Option<u16>,
+    #[serde(default)]
+    page: u16,
+}
+
+#[derive(Debug, Clone)]
+struct LoadedDescriptor {
+    line_height: u16,
+    glyphs: Vec<BitmapGlyph>,
 }
 
 #[derive(Error, Debug)]
@@ -51,7 +89,9 @@ enum CliError {
     Io(#[from] std::io::Error),
     #[error("Image decode error: {0}")]
     Image(#[from] image::ImageError),
-    #[error("BMFont parse error: {0}")]
+    #[error("JSON parse error: {0}")]
+    Json(#[from] serde_json::Error),
+    #[error("Descriptor parse error: {0}")]
     Parse(String),
     #[error("TTF conversion error: {0}")]
     Convert(String),
@@ -165,15 +205,15 @@ fn parse_bmfont_text(contents: &str) -> Result<BmfontInfo, CliError> {
                 pages.insert(id, file.to_string());
             }
             "char" => {
-                let ch = BmfontChar {
+                let ch = GlyphRect {
                     id: parse_u32(&map, "id")?,
                     x: parse_u32(&map, "x")?,
                     y: parse_u32(&map, "y")?,
                     width: parse_u16(&map, "width")?,
                     height: parse_u16(&map, "height")?,
-                    xoffset: parse_i16(&map, "xoffset")?,
-                    yoffset: parse_i16(&map, "yoffset")?,
-                    xadvance: parse_u16(&map, "xadvance")?,
+                    offset_x: parse_i16(&map, "xoffset")?,
+                    offset_y: parse_i16(&map, "yoffset")?,
+                    advance_width: parse_u16(&map, "xadvance")?,
                     page: parse_u16(&map, "page")?,
                 };
                 chars.push(ch);
@@ -232,31 +272,36 @@ fn extract_glyph_pixels(
     for gy in 0..h {
         for gx in 0..w {
             let p = image.get_pixel(x + gx, y + gy);
-            let alpha = p[3];
-            pixels.push(if alpha == 0 { 0 } else { 1 });
+            pixels.push(if p[3] == 0 { 0 } else { 1 });
         }
     }
     Ok(pixels)
 }
 
-fn bmfont_to_bitmap_glyphs(
+fn load_page_images(
     input_path: &Path,
-    info: &BmfontInfo,
-) -> Result<Vec<BitmapGlyph>, CliError> {
+    pages: &HashMap<u16, String>,
+) -> Result<HashMap<u16, image::RgbaImage>, CliError> {
     let base_dir = input_path
         .parent()
         .map(Path::to_path_buf)
         .unwrap_or_else(|| PathBuf::from("."));
 
     let mut page_images: HashMap<u16, image::RgbaImage> = HashMap::new();
-    for (&id, filename) in &info.pages {
+    for (&id, filename) in pages {
         let page_path = base_dir.join(filename);
         let image = ImageReader::open(&page_path)?.decode()?.to_rgba8();
         page_images.insert(id, image);
     }
+    Ok(page_images)
+}
 
-    let mut glyphs = Vec::with_capacity(info.chars.len());
-    for ch in &info.chars {
+fn glyph_rects_to_bitmap_glyphs(
+    chars: &[GlyphRect],
+    page_images: &HashMap<u16, image::RgbaImage>,
+) -> Result<Vec<BitmapGlyph>, CliError> {
+    let mut glyphs = Vec::with_capacity(chars.len());
+    for ch in chars {
         let page = page_images
             .get(&ch.page)
             .ok_or_else(|| CliError::Parse(format!("missing image for page {}", ch.page)))?;
@@ -265,19 +310,102 @@ fn bmfont_to_bitmap_glyphs(
             codepoint: ch.id,
             width: ch.width,
             height: ch.height,
-            offset_x: ch.xoffset,
-            offset_y: ch.yoffset,
-            advance_width: Some(ch.xadvance),
+            offset_x: ch.offset_x,
+            offset_y: ch.offset_y,
+            advance_width: Some(ch.advance_width),
             pixels,
         });
     }
     Ok(glyphs)
 }
 
-fn run(args: Args) -> Result<(), CliError> {
-    let bmfont_text = std::fs::read_to_string(&args.input)?;
+fn load_bmfont_descriptor(input_path: &Path) -> Result<LoadedDescriptor, CliError> {
+    let bmfont_text = std::fs::read_to_string(input_path)?;
     let info = parse_bmfont_text(&bmfont_text)?;
-    let glyphs = bmfont_to_bitmap_glyphs(&args.input, &info)?;
+    let page_images = load_page_images(input_path, &info.pages)?;
+    let glyphs = glyph_rects_to_bitmap_glyphs(&info.chars, &page_images)?;
+    Ok(LoadedDescriptor {
+        line_height: info.line_height,
+        glyphs,
+    })
+}
+
+fn descriptor_pages(json: &JsonDescriptor) -> Result<HashMap<u16, String>, CliError> {
+    if let Some(pages) = &json.pages {
+        if pages.is_empty() {
+            return Err(CliError::Parse(
+                "JSON descriptor pages array is empty".to_string(),
+            ));
+        }
+        return Ok(pages.iter().map(|p| (p.id, p.file.clone())).collect());
+    }
+
+    if let Some(image) = &json.image {
+        let mut map = HashMap::new();
+        map.insert(0, image.clone());
+        return Ok(map);
+    }
+
+    Err(CliError::Parse(
+        "JSON descriptor must define either 'pages' or 'image'".to_string(),
+    ))
+}
+
+fn json_glyphs_to_rects(json: &JsonDescriptor) -> Vec<GlyphRect> {
+    json.glyphs
+        .iter()
+        .map(|g| GlyphRect {
+            id: g.codepoint,
+            x: g.x,
+            y: g.y,
+            width: g.width,
+            height: g.height,
+            offset_x: g.offset_x,
+            offset_y: g.offset_y,
+            advance_width: g.advance_width.unwrap_or(g.width.saturating_add(1)),
+            page: g.page,
+        })
+        .collect()
+}
+
+fn load_json_descriptor(input_path: &Path) -> Result<LoadedDescriptor, CliError> {
+    let text = std::fs::read_to_string(input_path)?;
+    let json: JsonDescriptor = serde_json::from_str(&text)?;
+
+    if json.glyphs.is_empty() {
+        return Err(CliError::Parse(
+            "JSON descriptor has no glyph entries".to_string(),
+        ));
+    }
+
+    let pages = descriptor_pages(&json)?;
+    let glyph_rects = json_glyphs_to_rects(&json);
+    let page_images = load_page_images(input_path, &pages)?;
+    let glyphs = glyph_rects_to_bitmap_glyphs(&glyph_rects, &page_images)?;
+    Ok(LoadedDescriptor {
+        line_height: json.line_height,
+        glyphs,
+    })
+}
+
+fn load_descriptor(input_path: &Path) -> Result<LoadedDescriptor, CliError> {
+    let ext = input_path
+        .extension()
+        .and_then(|v| v.to_str())
+        .map(str::to_ascii_lowercase)
+        .unwrap_or_default();
+
+    match ext.as_str() {
+        "fnt" => load_bmfont_descriptor(input_path),
+        "json" => load_json_descriptor(input_path),
+        _ => Err(CliError::Parse(
+            "unsupported descriptor extension; use .fnt or .json".to_string(),
+        )),
+    }
+}
+
+fn run(args: Args) -> Result<(), CliError> {
+    let loaded = load_descriptor(&args.input)?;
 
     let family_name = args
         .family_name
@@ -291,11 +419,11 @@ fn run(args: Args) -> Result<(), CliError> {
 
     let config = FontConfig {
         family_name,
-        line_height: args.line_height.unwrap_or(info.line_height),
+        line_height: args.line_height.unwrap_or(loaded.line_height),
         scale: args.scale,
     };
 
-    let ttf = build_ttf(&glyphs, &config).map_err(|e| CliError::Convert(e.to_string()))?;
+    let ttf = build_ttf(&loaded.glyphs, &config).map_err(|e| CliError::Convert(e.to_string()))?;
 
     if let Some(parent) = args.output.parent()
         && !parent.as_os_str().is_empty()
