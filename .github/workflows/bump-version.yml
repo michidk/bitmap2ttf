@@ -20,6 +20,16 @@ jobs:
     name: Bump version and create tag
     runs-on: ubuntu-24.04
     steps:
+      - name: Ensure release token is configured
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          if [[ -z "$RELEASE_TOKEN" ]]; then
+            echo "::error::Missing secret RELEASE_TOKEN."
+            echo "::error::A PAT is required so push/tag events can trigger downstream workflows (e.g. release.yml)."
+            exit 1
+          fi
+
       - name: Validate version format
         run: |
           if [[ ! "${{ inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -29,6 +39,8 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.RELEASE_TOKEN }}
 
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@stable
