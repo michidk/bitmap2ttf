@@ -26,11 +26,20 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Upload bitmap2ttf to crates.io
-        run: cargo publish -p bitmap2ttf
+        run: cargo publish -p bitmap2ttf --locked
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
-      - name: Upload bitmap2ttf-cli to crates.io
-        run: cargo publish -p bitmap2ttf-cli
+      - name: Upload bitmap2ttf-cli to crates.io (with index retry)
+        run: |
+          for attempt in 1 2 3 4 5; do
+            if cargo publish -p bitmap2ttf-cli --locked; then
+              exit 0
+            fi
+            echo "publish attempt ${attempt} failed; waiting for crates.io index propagation..."
+            sleep 20
+          done
+          echo "failed to publish bitmap2ttf-cli after retries"
+          exit 1
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
