@@ -7,6 +7,8 @@ on:
         description: "The git tag to publish"
         required: true
         type: string
+  release:
+    types: [published]
 
 jobs:
   publish-cratesio:
@@ -17,7 +19,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.inputs.tag-name }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag-name || github.event.release.tag_name }}
 
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@stable
