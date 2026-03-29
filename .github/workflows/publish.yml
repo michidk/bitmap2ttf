@@ -1,0 +1,36 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag-name:
+        description: "The git tag to publish"
+        required: true
+        type: string
+
+jobs:
+  publish-cratesio:
+    name: Publish to crates.io
+    runs-on: ubuntu-24.04
+    environment: publish-crates.io
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.tag-name }}
+
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Upload bitmap2ttf to crates.io
+        run: cargo publish -p bitmap2ttf
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Upload bitmap2ttf-cli to crates.io
+        run: cargo publish -p bitmap2ttf-cli
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
