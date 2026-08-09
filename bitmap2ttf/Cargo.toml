@@ -13,9 +13,9 @@ keywords = ["bitmap", "font", "ttf", "truetype", "pixel-font"]
 categories = ["graphics", "command-line-utilities"]
 
 [dependencies]
-kurbo = "0.11"
-write-fonts = "0.39"
+kurbo = "0.13"
+write-fonts = "0.51"
 thiserror = "2.0.18"
 
 [dev-dependencies]
-ttf-parser = "0.24"
+ttf-parser = "0.25"
