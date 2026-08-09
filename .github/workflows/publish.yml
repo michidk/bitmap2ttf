@@ -21,7 +21,7 @@ jobs:
     environment: publish-crates.io
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag-name || github.event.release.tag_name }}
 
