@@ -3,6 +3,7 @@ name: Bump Version & Tag
 on:
   workflow_dispatch:
     inputs:
+      # checkov:skip=CKV_GHA_7:This release entry point validates the semantic version before changing build inputs.
       version:
         description: "Version to release (e.g. 1.2.3, without 'v' prefix)"
         required: true
@@ -43,7 +44,7 @@ jobs:
           token: ${{ secrets.RELEASE_TOKEN }}
 
       - name: Install toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
 
       - name: Bump versions in workspace crates
         run: |
