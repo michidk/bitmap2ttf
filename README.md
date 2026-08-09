@@ -1,7 +1,6 @@
 # bitmap2ttf
 
 [![bitmap2ttf crate](https://img.shields.io/crates/v/bitmap2ttf)](https://crates.io/crates/bitmap2ttf)
-[![bitmap2ttf-cli crate](https://img.shields.io/crates/v/bitmap2ttf-cli)](https://crates.io/crates/bitmap2ttf-cli)
 [![MIT License](https://img.shields.io/crates/l/bitmap2ttf)](https://choosealicense.com/licenses/mit/)
 [![Continuous integration](https://github.com/michidk/bitmap2ttf/actions/workflows/ci.yml/badge.svg)](https://github.com/michidk/bitmap2ttf/actions/workflows/ci.yml)
 
