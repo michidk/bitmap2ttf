@@ -19,7 +19,7 @@ Takes pixel-grid glyph data and produces valid TrueType fonts with traced vector
 
 ## Installation
 
-### Library
+### Library crate
 
 Install [bitmap2ttf using cargo](https://crates.io/crates/bitmap2ttf):
 
@@ -28,7 +28,7 @@ Install [bitmap2ttf using cargo](https://crates.io/crates/bitmap2ttf):
 bitmap2ttf = "0.1"
 ```
 
-### CLI
+### CLI package
 
 Install [bitmap2ttf-cli using cargo](https://crates.io/crates/bitmap2ttf-cli):
 
@@ -38,7 +38,7 @@ cargo install bitmap2ttf-cli
 
 ## Usage
 
-### Library
+### Library API
 
 ```rust
 use bitmap2ttf::{BitmapGlyph, FontConfig, build_ttf};
@@ -93,7 +93,7 @@ let config = FontConfig {
 let ttf = build_ttf(&glyphs, &config)?;
 ```
 
-### CLI
+### Command-line usage
 
 Convert a BMFont (.fnt + .png atlas) to TrueType:
 
