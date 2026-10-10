@@ -18,4 +18,4 @@ write-fonts = "0.54"
 thiserror = "2.0.18"
 
 [dev-dependencies]
-ttf-parser = "0.25"
+ttf-parser = "=0.25.1"
