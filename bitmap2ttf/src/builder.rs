@@ -36,10 +36,6 @@ fn u32_to_i32(value: u32, context: &str) -> Result<i32, Error> {
     i32::try_from(value).map_err(|e| Error::Conversion(format!("{context}: {e}")))
 }
 
-fn u64_to_i64(value: u64, context: &str) -> Result<i64, Error> {
-    i64::try_from(value).map_err(|e| Error::Conversion(format!("{context}: {e}")))
-}
-
 fn i32_to_i16(value: i32, context: &str) -> Result<i16, Error> {
     i16::try_from(value).map_err(|e| Error::Conversion(format!("{context}: {e}")))
 }

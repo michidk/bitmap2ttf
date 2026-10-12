@@ -1,6 +1,5 @@
 use super::glyphs::{GlyphBbox, GlyphBuildData};
-use super::{Error, i32_to_i16, u32_to_i32, u32_to_u16, u64_to_i64};
-use std::time::{SystemTime, UNIX_EPOCH};
+use super::{Error, i32_to_i16, u32_to_i32, u32_to_u16};
 use write_fonts::tables::head::Flags;
 
 #[derive(Clone, Copy)]
@@ -16,7 +15,6 @@ pub(super) struct FontGlobalMetrics {
     pub(super) units_per_em: u16,
     pub(super) ascender: i16,
     pub(super) descender: i16,
-    pub(super) now_mac_epoch: i64,
     pub(super) head_flags: Flags,
     pub(super) summary: HorizontalMetricsSummary,
 }
@@ -40,17 +38,10 @@ pub(super) fn prepare_global_metrics(
     )?;
     let summary =
         summarize_horizontal_metrics(&glyph_data.glyph_metrics, &glyph_data.glyph_bboxes)?;
-    let now_unix = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_err(|error| Error::Conversion(error.to_string()))?
-        .as_secs();
-    let now_mac_epoch =
-        u64_to_i64(now_unix, "unix timestamp to i64")?.saturating_add(2_082_844_800);
     Ok(FontGlobalMetrics {
         units_per_em,
         ascender,
         descender,
-        now_mac_epoch,
         head_flags: head_flags(glyph_data),
         summary,
     })

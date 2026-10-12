@@ -14,6 +14,7 @@ Takes pixel-grid glyph data and produces valid TrueType fonts with traced vector
 - Run-length rect merging for minimal contour counts
 - Complete TTF table set: head, hhea, hmtx, maxp, cmap, name, OS/2, post, glyf/loca, gasp, DSIG
 - Fallible integer conversions throughout (no panics on overflow)
+- Deterministic output with zero creation/modification timestamps; no clock access required
 - BMFont (.fnt + .png atlas) and PNG+JSON CLI input support
 
 ## Installation
