@@ -1,5 +1,5 @@
 # @orcastrate
-# template: publish-rust-crate
+# template: rust/publish-crate
 # params:
 #   manifest_paths: [bitmap2ttf/Cargo.toml, bitmap2ttf-cli/Cargo.toml]
 # @end-orcastrate

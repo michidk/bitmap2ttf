@@ -1,5 +1,5 @@
 # @orcastrate
-# template: rust-release
+# template: rust/release
 # params:
 #   bin_name: bitmap2ttf
 #   manifest_paths: [bitmap2ttf/Cargo.toml, bitmap2ttf-cli/Cargo.toml]

@@ -1,5 +1,5 @@
 # @orcastrate
-# template: rust-bump-version
+# template: rust/bump-version
 # params:
 #   manifest_paths: [bitmap2ttf/Cargo.toml, bitmap2ttf-cli/Cargo.toml]
 # @end-orcastrate
