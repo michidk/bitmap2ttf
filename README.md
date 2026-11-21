@@ -1,7 +1,7 @@
 # bitmap2ttf
 
 [![bitmap2ttf crate](https://img.shields.io/crates/v/bitmap2ttf)](https://crates.io/crates/bitmap2ttf)
-[![MIT License](https://img.shields.io/crates/l/bitmap2ttf)](https://choosealicense.com/licenses/mit/)
+[![MIT License](https://img.shields.io/crates/l/bitmap2ttf)](https://github.com/michidk/bitmap2ttf/blob/main/LICENSE)
 [![Continuous integration](https://github.com/michidk/bitmap2ttf/actions/workflows/ci.yml/badge.svg)](https://github.com/michidk/bitmap2ttf/actions/workflows/ci.yml)
 
 Convert bitmap font glyphs into TrueType (.ttf) vector fonts.
@@ -111,6 +111,11 @@ The CLI reads either:
 - BMFont text descriptors (`.fnt`) with PNG atlas page references
 - JSON descriptors (`.json`) with either `image` (single page) or `pages` (multi-page)
 
+Optional flags: `--family-name` overrides the font family name (default: the
+input file name without its extension), `--line-height` overrides the
+descriptor's line height, and `--scale` sets the pixel-to-font-unit multiplier
+(default `64`).
+
 JSON descriptor shape:
 
 ```json
@@ -145,11 +150,11 @@ The output fonts are bitmap-traced vector outlines without hinting. They render 
 
 ## Repository Layout
 
-```
+```text
 bitmap2ttf/        # library crate (core conversion logic)
-bitmap2ttf-cli/    # CLI binary (BMFont input → TTF output)
+bitmap2ttf-cli/    # CLI binary (BMFont or PNG+JSON input → TTF output)
 ```
 
 ## License
 
-MIT
+[MIT](https://github.com/michidk/bitmap2ttf/blob/main/LICENSE)
